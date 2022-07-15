@@ -20,7 +20,6 @@ class Titanic(nn.Module):
         self.SibSpEmbedding = nn.Embedding(9, embedding_dim)
         self.ParchEmbedding = nn.Embedding(10, embedding_dim)
         self.EmbarkedEmbedding = nn.Embedding(4, embedding_dim)
-        # add fare to factor
         self.FareEmbedding = nn.Embedding(53, embedding_dim)
         self.fc1 = nn.Linear(embedding_dim, linear_dim_1)
         self.ac1 = nn.ReLU()
@@ -36,7 +35,6 @@ class Titanic(nn.Module):
         Sibsp = self.SibSpEmbedding(sibsp)
         Parch = self.ParchEmbedding(parch)
         Embarked = self.EmbarkedEmbedding(embarked)
-        # add fare to factor
         Fare = self.FareEmbedding(fare)
         vector = Sex + Pclass + Age + Sibsp + Parch + Embarked + Fare
         x = self.fc1(vector)
@@ -48,17 +46,16 @@ class Titanic(nn.Module):
         return x
 
 
-data = pd.read_csv(Path("E://Kaggle/Titanic/Initial Data/train.csv"))
+data = pd.read_csv(Path("E://Kaggle/FDUTian/Titanic/Initial Data/train.csv"))
 data_row = data.values.tolist()
 random.shuffle(data_row)
 train_data = data_row[:800]
 valid_data = data_row[800:]
-test_data = pd.read_csv(Path("E://Kaggle/Titanic/Initial Data/test.csv")).values.tolist()
+test_data = pd.read_csv(Path("E://Kaggle/FDUTian/Titanic/Initial Data/test.csv")).values.tolist()
 
 
 class DataGeneretor(Dataset):
     def __init__(self, data):
-        # add fare to factor
         sex, pclass, age, sibsp, parch, embarked, fare, survive = list(), list(), list(), list(), list(), list(), list(), list()
         for each_row in data:
             survive.append([int(each_row[1])])
@@ -73,7 +70,6 @@ class DataGeneretor(Dataset):
                 age.append([math.ceil(each_row[5])])
             sibsp.append([int(each_row[6])])
             parch.append([int(each_row[7])])
-            # add fare to factor
             if math.isnan(each_row[9]):
                 fare.append([52])
             elif not math.isnan(each_row[9]):
@@ -93,7 +89,6 @@ class DataGeneretor(Dataset):
             self.parch = torch.tensor(parch, device="cuda")
             self.embarked = torch.tensor(embarked, device="cuda")
             self.survive = torch.tensor(survive, device="cuda")
-            # add fare to factor
             self.fare = torch.tensor(fare, device="cuda")
             
  
@@ -106,7 +101,6 @@ class DataGeneretor(Dataset):
 
 class TestDataGeneretor(Dataset):
     def __init__(self, data):
-        # add fare to factor
         sex, pclass, age, sibsp, parch, embarked, fare = list(), list(), list(), list(), list(), list(), list()
         for each_row in data:
             pclass.append([int(each_row[1])])
@@ -120,7 +114,6 @@ class TestDataGeneretor(Dataset):
                 age.append([math.ceil(each_row[4])])
             sibsp.append([int(each_row[5])])
             parch.append([int(each_row[6])])
-            # add fare to factor
             if math.isnan(each_row[8]):
                 fare.append([52])
             elif not math.isnan(each_row[8]):
@@ -139,7 +132,6 @@ class TestDataGeneretor(Dataset):
             self.sibsp = torch.tensor(sibsp, device="cuda")
             self.parch = torch.tensor(parch, device="cuda")
             self.embarked = torch.tensor(embarked, device="cuda")
-            # add fare to factor
             self.fare = torch.tensor(fare, device="cuda")
             
  
@@ -154,7 +146,7 @@ def train(train_data: List, model: Titanic):
     TrainGenerator = DataGeneretor(train_data)
     TrainLoader = DataLoader(TrainGenerator, batch_size=2, shuffle=True)
     Criterion = nn.CrossEntropyLoss()
-    optimizer = optim.AdamW(model.parameters(), lr=0.0001)
+    optimizer = optim.AdamW(model.parameters(), lr=0.0005)
     model.train()
     total_loss = 0
     cnt = 0
@@ -239,6 +231,6 @@ def predict(test_data: List, model: Titanic, model_path: str, result_path: str):
     dataframe.to_csv(result_path, index=False, sep=',')
 
 if __name__ == "__main__":
-    model = Titanic(512, 128, 16).to("cuda")
-    processor(train_data, valid_data, model, 100, "E://Kaggle/Titanic/Generative Data/model_2.pt")
-    predict(test_data, model, "E://Kaggle/Titanic/Generative Data/model_2.pt", "E://Kaggle/Titanic/Generative Data/result_2.csv")
+    model = Titanic(128, 512, 512).to("cuda")
+    processor(train_data, valid_data, model, 100, "E://Kaggle/FDUTian/Titanic/Generative Data/model.pt")
+    predict(test_data, model, "E://Kaggle/FDUTian/Titanic/Generative Data/model.pt", "E://Kaggle/FDUTian/Titanic/Generative Data/result.csv")
